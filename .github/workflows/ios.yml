@@ -7,7 +7,7 @@ on:
 
 jobs:
   validate:
-    name: Cohérence du projet
+    name: Structure du projet (Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -16,10 +16,34 @@ jobs:
           node-version: 20
       - run: node scripts/validate-project.mjs
 
+  lint:
+    name: SwiftLint (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Installe SwiftLint (binaire statique)
+        run: |
+          curl -fL --retry 3 -o /tmp/swiftlint.zip \
+            https://github.com/realm/SwiftLint/releases/download/0.65.1/swiftlint_linux_amd64.zip
+          unzip -o -q /tmp/swiftlint.zip -d "$HOME/.local/bin"
+          rm -f "$HOME/.local/bin/swiftlint"
+          ln -s swiftlint-static "$HOME/.local/bin/swiftlint"
+      - run: bash scripts/lint.sh
+
+  swift-check:
+    name: Syntaxe + type-check Swift (Linux)
+    runs-on: ubuntu-latest
+    container: swift:6.2
+    steps:
+      - uses: actions/checkout@v4
+      # SwiftLint est absent du conteneur : l'étape 4 est ignorée, les
+      # étapes 1 à 3 (parse, type-check, tests) s'exécutent quand même.
+      - run: bash scripts/swift-check.sh
+
   build-and-test:
-    name: Build + tests (simulateur)
+    name: Build + tests (simulateur macOS)
     runs-on: macos-15
-    needs: validate
+    needs: [validate, lint, swift-check]
     steps:
       - uses: actions/checkout@v4
 

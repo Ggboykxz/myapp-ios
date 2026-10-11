@@ -2,10 +2,15 @@
   "name": "myapp-ios",
   "version": "1.0.0",
   "private": true,
-  "description": "Projet SwiftUI (iOS 17) — validation de structure sans Xcode.",
+  "description": "Projet SwiftUI (iOS 17) — vérification complète sans Xcode.",
   "type": "module",
   "scripts": {
-    "validate": "node scripts/validate-project.mjs"
+    "validate": "node scripts/validate-project.mjs",
+    "check": "node scripts/validate-project.mjs && bash scripts/swift-check.sh",
+    "parse": "bash scripts/swift-check.sh --parse-only",
+    "lint": "bash scripts/lint.sh",
+    "build": "bash scripts/xcodebuild.sh build",
+    "test": "bash scripts/xcodebuild.sh test"
   },
   "engines": {
     "node": ">=18"

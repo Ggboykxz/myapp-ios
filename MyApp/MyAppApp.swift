@@ -1,5 +1,5 @@
-import SwiftUI
 import Observation
+import SwiftUI
 
 /// Point d'entrée de l'application.
 ///

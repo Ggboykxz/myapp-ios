@@ -31,6 +31,6 @@ extension Item {
     static let samples: [Item] = [
         Item(title: "Configurer le compte développeur", note: "Team Apple Developer"),
         Item(title: "Créer les icônes d'app", note: "Export 1024×1024", isDone: true),
-        Item(title: "Relire la charte graphique", createdAt: .now.addingTimeInterval(-86_400)),
+        Item(title: "Relire la charte graphique", createdAt: .now.addingTimeInterval(-86_400))
     ]
 }

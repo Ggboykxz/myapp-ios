@@ -1,5 +1,5 @@
-import SwiftUI
 import Observation
+import SwiftUI
 
 /// Écran principal : liste filtrable/cherchable des éléments.
 struct ContentView: View {

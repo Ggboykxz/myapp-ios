@@ -16,16 +16,23 @@ la structure du projet.
 ## État de l'environnement
 
 Cette machine est **Linux (Firebase Studio)** : pas de Xcode, pas de
-`swiftc`, pas de simulateur iOS. Un build iOS natif y est **impossible**.
-Ce qui est faisable ici, et qui est en place :
+simulateur iOS — un **build iOS natif y reste impossible**. En revanche, une
+**toolchain Swift 6.2 + SwiftLint** y est installée : le code est parsé,
+typé et linté ici. Seule la couche SwiftUI échappe au typage (SDK Apple
+absent).
 
-- écriture et review du code Swift, structure MVVM complète ;
-- `npm run validate` (ou `node scripts/validate-project.mjs`) — vérifie sans
-  Xcode que le `.pbxproj`, les assets et les sources restent cohérents :
-  syntaxe plist analysée par un parseur réel, IDs 24 caractères, fichiers
-  orphelins ou manquants, JSON d'assets, schéma partagé ;
-- CI GitHub Actions : job `validate` sur Ubuntu + job `build-and-test` sur
-  runner `macos-15` (`.github/workflows/ios.yml`).
+| Vérification | Commande | Ici | Sur Mac |
+|---|---|---|---|
+| Structure `.pbxproj`, assets, schéma | `npm run validate` | ✅ | ✅ |
+| Syntaxe des 11 fichiers Swift | `npm run parse` | ✅ | ✅ |
+| Type-check modèle / magasin / ViewModel | `npm run check` | ✅ | ✅ |
+| Tests unitaires typés (module `MyApp`) | `npm run check` | ✅ | ✅ |
+| SwiftLint (style + règles) | `npm run lint` | ✅ | ✅ |
+| Type-check des vues SwiftUI | — | ❌ | ✅ Xcode |
+| Compilation, simulateur, XCUITest | `npm run build` / `npm test` | ❌ | ✅ |
+
+CI GitHub Actions (`.github/workflows/ios.yml`) : `validate` + `lint` +
+`swift-check` sur Linux, puis `build-and-test` sur runner `macos-15`.
 
 Sur Mac, il faut : **Xcode 15 ou +**, un compte Apple Developer (gratuit
 suffit pour le simulateur).
@@ -40,17 +47,51 @@ open MyApp.xcodeproj     # ou `make open`
 En ligne de commande :
 
 ```bash
-npm run validate   # ici, sans Xcode (Linux/CI) — équivalent de `make validate`
-make build         # xcodebuild … build   (simulateur, macOS)
-make test          # xcodebuild … test    (unitaires + UI, macOS)
+npm run validate   # structure du projet (rapide, sans toolchain)
+npm run check      # structure + syntaxe + type-check + tests + lint
+npm run lint       # SwiftLint seul
+npm run build      # xcodebuild build  (macOS)
+npm test           # xcodebuild test   (macOS)
 ```
 
-Le `Makefile` suppose `make` (installé avec les Xcode Command Line Tools) :
-sous cette machine il n'est pas présent, d'où la commande `npm run validate`.
+Mêmes cibles en `make validate|check|build|test` — mais `make` n'est pas
+installé sur cette machine, d'où les commandes `npm` par défaut.
 
-> Le simulateur `iPhone 16` du Makefile est un exemple : liste ce qui existe
-> chez toi avec `xcrun simctl list devices available` et ajuste
-> `DESTINATION`.
+> `scripts/xcodebuild.sh` choisit automatiquement le premier simulateur
+> iPhone disponible (`xcrun simctl list devices available`) : plus besoin de
+> deviner le nom exact.
+
+## Toolchain Swift sous Linux
+
+Réinstallable de zéro sur une image similaire (étapes réellement
+appliquées ici, Swift 6.2 / Ubuntu 24.04) :
+
+1. **Le binaire** — tarball officiel :
+   ```bash
+   mkdir -p ~/.local/share/swift
+   curl -fL https://download.swift.org/swift-6.2-release/ubuntu2404/swift-6.2-RELEASE/swift-6.2-RELEASE-ubuntu24.04.tar.gz \
+     | tar -xz -C ~/.local/share/swift --strip-components=1
+   ```
+2. **4 libs système absentes** (`libncurses.so.6`, `libtinfo.so.6`,
+   `libsqlite3.so.0`, `libuuid.so.1`) → liens symboliques dans
+   `~/.local/share/swift/lib-deps/`, exposés par `LD_LIBRARY_PATH`
+   (pris en charge automatiquement par `scripts/swift-check.sh`).
+3. **En-têtes C absents** (`/usr/include` est vide sur cette image) →
+   `glibc-2.40-66-dev` et `linux-headers-6.2` du store Nix, passés en
+   `-Xcc -isystem`.
+4. **Module map `SwiftGlibc`** non transmis par le driver → forcé avec
+   `-Xcc -fmodule-map-file`, `assert.h` lié à côté (un `textual header` se
+   résout relativement au module map).
+5. **`<tgmath.h>`** → glibc 2.40 refuse l'association clang ↔ édition GCC
+   4.2.1 : un shim vide en tête de path contourne le problème, sans incidence
+   sur le typage Swift.
+6. **SwiftLint** → `swiftlint_linux_amd64.zip` (0.65.1) dans
+   `~/.local/bin` : utiliser le binaire **`swiftlint-static`**, l'autre
+   réclame `libcurl.so.4`, absent ici.
+
+Sur une Ubuntu standard, **aucune de ces étapes n'est nécessaire** :
+`scripts/swift-check.sh` détecte l'environnement et n'ajoute que le
+strict nécessaire.
 
 ## Arborescence
 
@@ -70,11 +111,15 @@ sous cette machine il n'est pas présent, d'où la commande `npm run validate`.
 ├── MyAppTests/               # tests unitaires du ViewModel
 ├── MyAppUITests/             # scénarios XCUITest
 ├── project.yml               # définition XcodeGen (fallback, optionnel)
-├── scripts/validate-project.mjs
-├── package.json              # `npm run validate`
-├── Makefile                  # build/test macOS
-├── .github/workflows/ios.yml # CI : validation + build/test sur macOS
-├── .swiftlint.yml            # à activer avec brew install swiftlint
+├── scripts/
+│   ├── validate-project.mjs  # parseur pbxproj + cohérence sources/assets
+│   ├── swift-check.sh        # parse + type-check + tests + lint
+│   ├── lint.sh               # SwiftLint, quel que soit son emplacement
+│   └── xcodebuild.sh         # build/test avec destination auto (macOS)
+├── package.json              # `npm run validate|check|parse|lint|build|test`
+├── Makefile                  # mêmes cibles en make (macOS)
+├── .github/workflows/ios.yml # CI : validate + lint + swift-check (Linux) → build/test (macOS)
+├── .swiftlint.yml            # config SwiftLint
 └── .editorconfig
 ```
 
@@ -116,11 +161,15 @@ avec `npm run validate` : un fichier absent du `.pbxproj` y serait signalé.
 
 ## Limites connues de cette machine
 
-- Pas de toolchain Swift : **aucune vérification de typage** ici, seule la
-  structure est validée. Les erreurs de compilation apparaîtront à la
-  première ouverture sous Xcode.
-- Pas de signature de code : `CODE_SIGN_STYLE = Automatic`, `DEVELOPMENT_TEAM`
-  non renseigné → à compléter dans *Signing & Capabilities* avant de déployer
-  sur un appareil physique.
-- `com.example.myapp` est un identifiant fictif : à remplacer avant tout
+- **La couche SwiftUI n'est pas typée ici** (pas de SDK Apple sur Linux) :
+  les vues sont parsées (SwiftLint les lit avec swift-syntax) et relues, mais
+  `@Bindable`, les modificateurs et les APIs iOS 17 ne sont vérifiés qu'à
+  l'ouverture sous Xcode. Tout le reste — modèle, magasin, ViewModel, tests —
+  est typé pour de bon.
+- **Signature** : `CODE_SIGN_STYLE = Automatic` et `DEVELOPMENT_TEAM = ""`
+  (6 occurrences dans le pbxproj, recherchez `DEVELOPMENT_TEAM`). C'est la
+  configuration **simulateur** : renseigner l'équipe dans *Signing &
+  Capabilities* avant tout dépôt sur un appareil physique.
+- **`com.example.myapp`** est un identifiant fictif : à remplacer avant tout
   dépôt sur l'App Store.
+- **App icon absente** : build accepté, avertissement Xcode à la compilation.
