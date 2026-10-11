@@ -1,0 +1,39 @@
+name: iOS
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    name: Cohérence du projet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node scripts/validate-project.mjs
+
+  build-and-test:
+    name: Build + tests (simulateur)
+    runs-on: macos-15
+    needs: validate
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Liste des simulateurs disponibles
+        run: xcrun simctl list devices available
+
+      - name: Build
+        run: |
+          xcodebuild -project MyApp.xcodeproj -scheme MyApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -configuration Debug build
+
+      - name: Tests
+        run: |
+          xcodebuild -project MyApp.xcodeproj -scheme MyApp \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            test

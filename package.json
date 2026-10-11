@@ -1,0 +1,13 @@
+{
+  "name": "myapp-ios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Projet SwiftUI (iOS 17) — validation de structure sans Xcode.",
+  "type": "module",
+  "scripts": {
+    "validate": "node scripts/validate-project.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

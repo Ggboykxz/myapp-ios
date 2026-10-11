@@ -1,0 +1,37 @@
+# Configuration SwiftLint — installer avec `brew install swiftlint` (macOS).
+# Lint non exécuté sous Linux : aucun toolchain Swift sur cette machine.
+
+included:
+  - MyApp
+excluded:
+  - build
+  - DerivedData
+  - .build
+
+disabled_rules:
+  - trailing_whitespace
+  - line_length
+
+opt_in_rules:
+  - empty_count
+  - empty_string
+  - closure_spacing
+  - collection_alignment
+  - first_where
+  - sorted_imports
+
+file_length:
+  warning: 600
+
+type_body_length:
+  warning: 300
+
+identifier_name:
+  min_length:
+    warning: 2
+  excluded:
+    - id
+    - x
+    - y
+
+reporter: "xcode"

@@ -1,0 +1,60 @@
+# --- Xcode / Swift -----------------------------------------------------------
+
+# Générés par Xcode : ne jamais les versionner (sauf les schémas partagés).
+xcuserdata/
+*.xcuserstate
+*.xcuserdatad/
+
+# Dépôts de build.
+build/
+DerivedData/
+*.moved-aside
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Playgrounds
+timeline.xctimeline
+playground.xcworkspace
+
+# Accès rapide Xcode
+*.xccheckout
+*.xcscmblueprint
+
+# --- Swift Package Manager ---------------------------------------------------
+
+.build/
+.swiftpm/
+Package.resolved
+
+# --- CocoaPods (au cas où) ---------------------------------------------------
+
+Pods/
+*.xcworkspace
+!default.xcworkspace
+
+# --- Tuist / XcodeGen --------------------------------------------------------
+
+# project.yml est versionné, le .xcodeproj régénéré ne l'est pas.
+# (XcodeGen : `xcodegen generate` — inutile si tu travailles sur le pbxproj actuel.)
+
+# --- Fichiers locaux et secrets ---------------------------------------------
+
+.env
+.env.*
+!.env.example
+*.mobileprovision
+*.p12
+*.cer
+*.certSigningRequest
+ExportOptions.plist
+
+# --- Éditeur / OS ------------------------------------------------------------
+
+.DS_Store
+*.swp
+*~
+.vscode/*
+!.vscode/settings.json
+.idea/
