@@ -58,3 +58,6 @@ ExportOptions.plist
 .vscode/*
 !.vscode/settings.json
 .idea/
+
+# Identifiants git locaux — ne jamais versionner
+.git-credentials
