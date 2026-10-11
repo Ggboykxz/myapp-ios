@@ -18,20 +18,20 @@ la structure du projet.
 ## État de l'environnement
 
 Cette machine est **Linux (Firebase Studio)** : pas de Xcode, pas de
-simulateur iOS — un **build iOS natif y reste impossible**. En revanche, une
-**toolchain Swift 6.2 + SwiftLint** y est installée : le code est parsé,
-typé et linté ici. Seule la couche SwiftUI échappe au typage (SDK Apple
-absent).
+simulateur iOS — un **build iOS natif y est impossible localement**. En
+revanche, une **toolchain Swift 6.2 + SwiftLint** y est installée : le code
+est parsé, typé et linté ici. La couche SwiftUI, elle, est **compilée et
+testée par la CI macOS à chaque push** (job `build-and-test`, Xcode 16.4).
 
-| Vérification | Commande | Ici | Sur Mac |
+| Vérification | Commande | Ici | Sur Mac / CI |
 |---|---|---|---|
 | Structure `.pbxproj`, assets, schéma | `npm run validate` | ✅ | ✅ |
 | Syntaxe des 11 fichiers Swift | `npm run parse` | ✅ | ✅ |
 | Type-check modèle / magasin / ViewModel | `npm run check` | ✅ | ✅ |
 | Tests unitaires typés (module `MyApp`) | `npm run check` | ✅ | ✅ |
 | SwiftLint (style + règles) | `npm run lint` | ✅ | ✅ |
-| Type-check des vues SwiftUI | — | ❌ | ✅ Xcode |
-| Compilation, simulateur, XCUITest | `npm run build` / `npm test` | ❌ | ✅ |
+| Type-check + compilation des vues SwiftUI | CI `build-and-test` | ❌ | ✅ Xcode 16.4 |
+| Tests unitaires + XCUITest sur simulateur | CI `build-and-test` | ❌ | ✅ |
 
 CI GitHub Actions (`.github/workflows/ios.yml`) : `validate` + `lint` +
 `swift-check` sur Linux, puis `build-and-test` sur runner `macos-15`.
@@ -168,9 +168,11 @@ avec `npm run validate` : un fichier absent du `.pbxproj` y serait signalé.
 
 - **La couche SwiftUI n'est pas typée ici** (pas de SDK Apple sur Linux) :
   les vues sont parsées (SwiftLint les lit avec swift-syntax) et relues, mais
-  `@Bindable`, les modificateurs et les APIs iOS 17 ne sont vérifiés qu'à
-  l'ouverture sous Xcode. Tout le reste — modèle, magasin, ViewModel, tests —
-  est typé pour de bon.
+  `@Bindable`, les modificateurs et les APIs iOS 17 ne sont vérifiés qu'en CI
+  ou sous Xcode. Ce trou est comblé par le job `build-and-test` à chaque
+  push : compilation Xcode 16.4 + 8 tests unitaires + 2 tests UI sur
+  simulateur (`** TEST SUCCEEDED **`). Le reste — modèle, magasin, ViewModel,
+  tests — est typé pour de bon, ici.
 - **Signature** : `CODE_SIGN_STYLE = Automatic` et `DEVELOPMENT_TEAM = ""`
   (6 occurrences dans le pbxproj, recherchez `DEVELOPMENT_TEAM`). C'est la
   configuration **simulateur** : renseigner l'équipe dans *Signing &
