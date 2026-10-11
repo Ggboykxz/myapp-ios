@@ -1,5 +1,7 @@
 # MyApp — projet SwiftUI (iOS 17.0)
 
+[![iOS](https://github.com/Ggboykxz/myapp-ios/actions/workflows/ios.yml/badge.svg)](https://github.com/Ggboykxz/myapp-ios/actions/workflows/ios.yml)
+
 Projet iOS natif **SwiftUI**, prêt à ouvrir sur Mac. Le développement se fait
 sur macOS (Xcode) ; cette machine (Linux) sert à écrire le code et à valider
 la structure du projet.
@@ -33,6 +35,9 @@ absent).
 
 CI GitHub Actions (`.github/workflows/ios.yml`) : `validate` + `lint` +
 `swift-check` sur Linux, puis `build-and-test` sur runner `macos-15`.
+Dépôt : <https://github.com/Ggboykxz/myapp-ios> — tout push sur `main`
+déclenche les 4 jobs ; `build-and-test` (macOS) démarre seulement si les 3
+jobs Linux sont verts.
 
 Sur Mac, il faut : **Xcode 15 ou +**, un compte Apple Developer (gratuit
 suffit pour le simulateur).
