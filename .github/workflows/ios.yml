@@ -51,14 +51,10 @@ jobs:
       - name: Liste des simulateurs disponibles
         run: xcrun simctl list devices available
 
+      # Destination détectée automatiquement : aucune dépendance au nom
+      # exact du simulateur installé sur l'image macOS.
       - name: Build
-        run: |
-          xcodebuild -project MyApp.xcodeproj -scheme MyApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
-            -configuration Debug build
+        run: bash scripts/xcodebuild.sh build
 
       - name: Tests
-        run: |
-          xcodebuild -project MyApp.xcodeproj -scheme MyApp \
-            -destination 'platform=iOS Simulator,name=iPhone 16' \
-            test
+        run: bash scripts/xcodebuild.sh test

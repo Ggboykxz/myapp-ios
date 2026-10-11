@@ -27,10 +27,11 @@ if [ "$ACTION" = "clean" ]; then
 fi
 
 # Destination : premier simulateur iPhone disponible.
+# Format attendu : "    iPhone 16 (UUID-xxx) (Shutdown)" → "iPhone 16"
 SIMULATOR="$(xcrun simctl list devices available \
   | grep -E 'iPhone [0-9]+' \
   | head -1 \
-  | sed -E 's/^ *(.*)( \(.*\))$/\1/' \
+  | sed -E 's/^ *([^()]+) \(.*$/\1/' \
   | sed 's/ *$//')"
 
 if [ -z "$SIMULATOR" ]; then
